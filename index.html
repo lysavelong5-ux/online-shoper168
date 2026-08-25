@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Shop Mini App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kantumruy Pro', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800 flex flex-col justify-between">
+
+    <div class="max-w-md mx-auto w-full bg-white min-h-screen shadow-xl flex flex-col justify-between relative">
+        
+        <!-- Header -->
+        <header class="bg-pink-600 text-white p-4 sticky top-0 z-40 flex justify-between items-center shadow-md">
+            <div>
+                <h1 class="font-bold text-lg">🛍️ Cute Shop Online</h1>
+                <p class="text-xs text-pink-100">លក់ខោអាវ & Skincare គុណភាពល្អ</p>
+            </div>
+            <button onclick="openCart()" class="bg-white/20 hover:bg-white/30 p-2 rounded-full relative transition">
+                🛒 <span id="cartCount" class="absolute -top-1 -right-1 bg-yellow-400 text-gray-900 font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+            </button>
+        </header>
+
+        <!-- Categories / Filters -->
+        <div class="p-4 bg-gray-100 flex gap-2 overflow-x-auto">
+            <button onclick="filterProducts('all')" class="px-4 py-1.5 bg-pink-600 text-white text-xs font-semibold rounded-full shrink-0 shadow">ទាំងអស់</button>
+            <button onclick="filterProducts('clothes')" class="px-4 py-1.5 bg-white text-gray-700 text-xs font-semibold rounded-full shrink-0 border border-gray-200">👗 ខោអាវ</button>
+            <button onclick="filterProducts('skincare')" class="px-4 py-1.5 bg-white text-gray-700 text-xs font-semibold rounded-full shrink-0 border border-gray-200">✨ Skincare</button>
+        </div>
+
+        <!-- Product List -->
+        <main class="p-4 flex-1 overflow-y-auto">
+            <div id="productList" class="grid grid-cols-2 gap-4">
+                <!-- Products will be loaded by JavaScript -->
+            </div>
+        </main>
+
+        <!-- Cart / Checkout Modal -->
+        <div id="cartModal" class="fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
+            <div class="bg-white w-full max-w-md rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto space-y-4">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <h2 class="font-bold text-lg">🛒 កន្ត្រកទំនិញរបស់អ្នក</h2>
+                    <button onclick="closeCart()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">✕</button>
+                </div>
+                
+                <div id="cartItems" class="space-y-3">
+                    <!-- Cart items -->
+                </div>
+
+                <div class="border-t pt-3 space-y-2">
+                    <div class="flex justify-between font-bold text-base">
+                        <span>សរុបទឹកប្រាក់៖</span>
+                        <span id="totalPrice" class="text-pink-600">0.00$</span>
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <input type="text" id="custName" placeholder="ឈ្មោះអ្នកទទួល..." class="w-full px-3 py-2 border rounded-xl text-xs">
+                        <input type="text" id="custPhone" placeholder="លេខទូរសព្ទ..." class="w-full px-3 py-2 border rounded-xl text-xs">
+                        <textarea id="custAddress" placeholder="អាសយដ្ឋានដឹកជញ្ជូន..." rows="2" class="w-full px-3 py-2 border rounded-xl text-xs"></textarea>
+                    </div>
+
+                    <button onclick="checkoutToTelegram()" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 rounded-xl transition text-sm shadow-lg shadow-pink-600/30">
+                        📩 បញ្ជាទិញតាម Telegram
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Navigation -->
+        <footer class="bg-white border-t p-3 text-center text-xs text-gray-500">
+            <p>👑 Powered by C Kh media</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, name: "អាវយឺតកូរ៉េ cute cute", price: 8.50, category: "clothes", image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300&q=80" },
+            { id: 2, name: "រ៉ូបនារីទាន់សម័យ", price: 15.00, category: "clothes", image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=300&q=80" },
+            { id: 3, name: "kem មុខសាច់្មត់ (Skincare)", price: 12.00, category: "skincare", image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=300&q=80" },
+            { id: 4, name: "Serum ផ្ដល់សំណើមស្បែក", price: 10.50, category: "skincare", image: "https://images.unsplash.com/photo-1608248597359-f7198d4982b8?w=300&q=80" },
+            { id: 5, name: "ខោខូវប៊យស្ទីលកូរ៉េ", price: 14.00, category: "clothes", image: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=300&q=80" },
+            { id: 6, name: "Sunscreen ការពារកំដៅថ្ងៃ", price: 9.00, category: "skincare", image: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=300&q=80" }
+        ];
+
+        let cart = [];
+
+        window.onload = function() {
+            renderProducts(products);
+        };
+
+        function renderProducts(items) {
+            const container = document.getElementById('productList');
+            container.innerHTML = '';
+            items.forEach(p => {
+                container.innerHTML += `
+                    <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col justify-between">
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-36 object-cover">
+                        <div class="p-3 flex flex-col justify-between flex-1">
+                            <div>
+                                <h3 class="font-bold text-xs line-clamp-1">${p.name}</h3>
+                                <p class="text-pink-600 font-bold text-sm mt-1">${p.price.toFixed(2)}$</p>
+                            </div>
+                            <button onclick="addToCart(${p.id})" class="mt-3 w-full bg-pink-50 hover:bg-pink-600 hover:text-white text-pink-600 font-semibold py-2 rounded-xl text-xs transition">
+                                + បញ្ចូលក្នុងកន្ត្រក
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterProducts(cat) {
+            if(cat === 'all') {
+                renderProducts(products);
+            } else {
+                const filtered = products.filter(p => p.category === cat);
+                renderProducts(filtered);
+            }
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            const exist = cart.find(item => item.id === id);
+            if(exist) {
+                exist.qty += 1;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            updateCartUI();
+            alert('បានបញ្ចូលទំនិញទៅក្នុងកន្ត្រក!');
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cartCount').innerText = count;
+
+            const itemsContainer = document.getElementById('cartItems');
+            itemsContainer.innerHTML = '';
+            let total = 0;
+
+            if(cart.length === 0) {
+                itemsContainer.innerHTML = `<p class="text-center text-gray-400 text-xs py-4">គ្មានទំនិញក្នុងកន្ត្រកទេ</p>`;
+            } else {
+                cart.forEach(item => {
+                    total += item.price * item.qty;
+                    itemsContainer.innerHTML += `
+                        <div class="flex justify-between items-center text-xs border-b pb-2">
+                            <div>
+                                <p class="font-bold">${item.name}</p>
+                                <p class="text-gray-500">${item.price}$ x ${item.qty}</p>
+                            </div>
+                            <button onclick="removeItem(${item.id})" class="text-red-500 font-bold px-2">លុប</button>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('totalPrice').innerText = total.toFixed(2) + '$';
+        }
+
+        function removeItem(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        function openCart() {
+            document.getElementById('cartModal').classList.remove('hidden');
+        }
+
+        function closeCart() {
+            document.getElementById('cartModal').classList.add('hidden');
+        }
+
+        function checkoutToTelegram() {
+            const name = document.getElementById('custName').value;
+            const phone = document.getElementById('custPhone').value;
+            const address = document.getElementById('custAddress').value;
+
+            if(!name || !phone || !address || cart.length === 0) {
+                alert('សូមបំពេញព័ត៌មាន និងជ្រើសរើសទំនិញឱ្យបានគ្រប់គ្រាន់!');
+                return;
+            }
+
+            let msg = `🛒 *មានការបញ្ជាទិញថ្មីពី Mini App!*%0A%0A`;
+            msg += `👤 ឈ្មោះ៖ ${name}%0A`;
+            msg += `📞 លេខទូរសព្ទ៖ ${phone}%0A`;
+            msg += `📍 អាសយដ្ឋាន៖ ${address}%0A%0A`;
+            msg += `📦 *ទំនិញ៖*%0A`;
+            
+            let total = 0;
+            cart.forEach(i => {
+                msg += `- ${i.name} (${i.qty}x) = ${(i.price * i.qty).toFixed(2)}$%0A`;
+                total += i.price * i.qty;
+            });
+            msg += `%0A💰 *សរុបទាំងអស់៖ ${total.toFixed(2)}$*`;
+
+            const adminTelegram = "Neakkrobkrong";
+            window.open(`https://t.me/${adminTelegram}?text=${msg}`, '_blank');
+        }
+    </script>
+
+</body>
+</html>
